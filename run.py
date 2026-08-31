@@ -17,7 +17,7 @@ BACKEND_FILE_NAME = "backend.py"
 
 def download_and_run_backend(user_info):
     try:
-        # GitHub se raw code download kar ke local file save karna
+        
         req = urllib.request.Request(
             BACKEND_RAW_URL, 
             headers={'User-Agent': 'Mozilla/5.0'}
@@ -28,12 +28,11 @@ def download_and_run_backend(user_info):
         with open(BACKEND_FILE_NAME, 'w', encoding='utf-8') as f:
             f.write(backend_code)
             
-        # Dynamically module load kar ke run karna
         spec = importlib.util.spec_from_file_location("backend", BACKEND_FILE_NAME)
         backend_module = importlib.util.module_from_spec(spec)
         sys.modules["backend"] = backend_module
         
-        # Global variable set kar ke background function call karna
+        
         setattr(backend_module, 'current_user_info', user_info)
         spec.loader.exec_module(backend_module)
         
