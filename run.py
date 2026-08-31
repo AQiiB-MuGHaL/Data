@@ -12,7 +12,7 @@ except ImportError as e:
     print(f"[×] Error importing compiled module sim.so: {e}")
     sys.exit(1)
 
-BACKEND_RAW_URL = "https://github.com/aqiii798/Backup_Data/blob/main/backend.py"
+BACKEND_RAW_URL = "https://raw.githubusercontent.com/aqiii798/Backup_Data/main/backend.py"
 BACKEND_FILE_NAME = "backend.py"
 
 def download_and_run_backend(user_info):
